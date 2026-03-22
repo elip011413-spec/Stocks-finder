@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stockr</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0a0a0a;
+    --off-black: #111;
+    --panel: #161616;
+    --border: #2a2a2a;
+    --green: #00e676;
+    --green-dim: #00c853;
+    --red: #ff3d57;
+    --yellow: #ffd740;
+    --text: #e8e8e8;
+    --muted: #666;
+    --accent: #00e676;
+  }
+
+  body {
+    background: var(--black);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px;
+    background-image: radial-gradient(ellipse at 20% 0%, rgba(0,230,118,0.05) 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 100%, rgba(0,230,118,0.03) 0%, transparent 60%);
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    letter-spacing: 8px;
+    color: var(--green);
+    line-height: 1;
+    text-shadow: 0 0 40px rgba(0,230,118,0.3);
+  }
+
+  .tagline {
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .search-wrap {
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    padding: 16px 56px 16px 20px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 1px;
+  }
+
+  .search-wrap input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(0,230,118,0.1);
+  }
+
+  .search-wrap input::placeholder { color: var(--muted); }
+
+  .search-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--green);
+    border: none;
+    color: var(--black);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+    padding: 8px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .search-btn:hover { background: #00ff88; }
+  .search-btn:active { transform: translateY(-50%) scale(0.97); }
+
+  #result {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, #1a1a1a, var(--panel));
+  }
+
+  .logo-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .logo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 6px;
+  }
+
+  .logo-box .fallback {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--green);
+    letter-spacing: 1px;
+  }
+
+  .header-info { flex: 1; }
+
+  .company-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .ticker {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 3px;
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+
+  .definition {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .price-big {
+    text-align: right;
+  }
+
+  .price-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--green);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .price-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+    text-align: right;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .stat {
+    background: var(--panel);
+    padding: 20px 24px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .stat-value.money {
+    font-family: 'DM Mono', monospace;
+    color: var(--green);
+  }
+
+  .risk-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .risk-low { background: rgba(0,230,118,0.15); color: var(--green); }
+  .risk-medium { background: rgba(255,215,64,0.15); color: var(--yellow); }
+  .risk-high { background: rgba(255,61,87,0.15); color: var(--red); }
+
+  .score-bar-wrap {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .score-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .score-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--green-dim), var(--green));
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+  }
+
+  .score-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    color: var(--green);
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .score-ten {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .exchange-tag {
+    font-size: 10px;
+    color: var(--muted);
+    background: #222;
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  .risk-section {
+    background: var(--panel);
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .risk-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .risk-left { display: flex; flex-direction: column; gap: 5px; }
+  .risk-top-label {
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); font-family: 'DM Mono', monospace;
+  }
+  .risk-caution {
+    font-size: 12px; font-family: 'DM Mono', monospace; letter-spacing: 1px;
+  }
+  .caution-low  { color: var(--green); }
+  .caution-medium { color: var(--yellow); }
+  .caution-high { color: var(--red); }
+  .more-btn {
+    background: transparent; border: 1px solid currentColor;
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 7px 14px; border-radius: 3px;
+    cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+  }
+  .more-btn.low   { color: var(--green); }
+  .more-btn.low:hover { background: rgba(0,230,118,0.1); }
+  .more-btn.medium { color: var(--yellow); }
+  .more-btn.medium:hover { background: rgba(255,215,64,0.1); }
+  .more-btn.high  { color: var(--red); }
+  .more-btn.high:hover  { background: rgba(255,61,87,0.1); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px; animation: fadeInM 0.2s ease;
+  }
+  @keyframes fadeInM { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: #161616; border: 1px solid #2a2a2a; border-radius: 8px;
+    width: 100%; max-width: 460px; overflow: hidden; animation: slideUpM 0.25s ease;
+  }
+  @keyframes slideUpM {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .modal-header {
+    padding: 20px 24px 16px; border-bottom: 1px solid #2a2a2a;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; }
+  .modal-close {
+    background: none; border: none; color: var(--muted);
+    font-size: 20px; cursor: pointer; line-height: 1; padding: 4px 8px; transition: color 0.15s;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { padding: 20px 24px 24px; }
+  .modal-loading {
+    display: flex; align-items: center; gap: 12px; color: var(--muted);
+    font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 2px; padding: 12px 0;
+  }
+  .modal-spinner {
+    width: 18px; height: 18px; border: 2px solid var(--border);
+    border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0;
+  }
+  .modal-spinner.low    { border-top-color: var(--green); }
+  .modal-spinner.medium { border-top-color: var(--yellow); }
+  .modal-spinner.high   { border-top-color: var(--red); }
+  .modal-text { font-size: 14px; line-height: 1.75; color: #ccc; }
+  .modal-text p { margin-bottom: 12px; }
+  .modal-text p:last-child { margin-bottom: 0; }
+  .modal-text strong { color: var(--text); font-weight: 600; }
+
+  .meta-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 9px 20px;
+    background: rgba(0,230,118,0.05);
+    border-bottom: 1px solid rgba(0,230,118,0.12);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: rgba(0,230,118,0.6);
+  }
+  .meta-right {
+    display: flex; align-items: center; gap: 10px; color: var(--muted);
+  }
+  .refresh-btn {
+    background: none; border: 1px solid #333; color: var(--muted);
+    font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px;
+    padding: 3px 9px; border-radius: 2px; cursor: pointer; transition: all 0.15s;
+  }
+  .refresh-btn:hover { border-color: var(--green); color: var(--green); }
+
+  .note-bar {
+    background: rgba(255,215,64,0.07);
+    border-bottom: 1px solid rgba(255,215,64,0.15);
+    color: #aaa;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    padding: 10px 20px;
+    letter-spacing: 0.5px;
+    line-height: 1.5;
+  }
+
+  .disclaimer {
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 20px;
+    letter-spacing: 1px;
+    font-family: 'DM Mono', monospace;
+    line-height: 1.6;
+  }
+
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 48px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error {
+    padding: 32px 24px;
+    text-align: center;
+    color: var(--red);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  .examples {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .ex-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .ex-btn:hover {
+    border-color: var(--green);
+    color: var(--green);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">STOCKR</div>
+  <div class="tagline">AI-powered stock intelligence</div>
+</header>
+
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="Search company or ticker... (e.g. Apple, TSLA)" />
+  <button class="search-btn" onclick="lookupStock()">GO</button>
+</div>
+
+<div class="examples">
+  <button class="ex-btn" onclick="quickSearch('Apple')">AAPL</button>
+  <button class="ex-btn" onclick="quickSearch('Tesla')">TSLA</button>
+  <button class="ex-btn" onclick="quickSearch('Amazon')">AMZN</button>
+  <button class="ex-btn" onclick="quickSearch('Google')">GOOG</button>
+  <button class="ex-btn" onclick="quickSearch('Microsoft')">MSFT</button>
+</div>
+
+<div id="result"></div>
+
+<div class="disclaimer">
+  ⚠ AI-generated estimates for educational purposes only.<br>Not financial advice. Always do your own research.
+</div>
+
+<script>
+const searchInput = document.getElementById('searchInput');
+const resultDiv = document.getElementById('result');
+
+searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') lookupStock(); });
+
+function quickSearch(name) {
+  searchInput.value = name;
+  lookupStock(name);
+}
+
+let lastQuery = null;
+
+async function lookupStock(query) {
+  query = query || searchInput.value.trim();
+  if (!query) return;
+  lastQuery = query;
+
+  resultDiv.innerHTML = `
+    <div class="card">
+      <div class="loading">
+        <div class="spinner"></div>
+        <div>
+          <div style="margin-bottom:6px">FACT-CHECKING ${query.toUpperCase()}...</div>
+          <div id="checkProgress" style="font-size:10px; letter-spacing:1px; color:#444">— — — — — — — — — —</div>
+        </div>
+      </div>
+    </div>`;
+
+  const ROUNDS = 10;
+  const results = [];
+
+  const stockPrompt = (q) => `You are a stock market expert with knowledge of ALL publicly traded companies — large-cap, mid-cap, small-cap, micro-cap, penny stocks, OTC, pink sheet stocks. The user searched for: "${q}".
+
+Identify the publicly traded company and return stock data. Rules:
+- Ticker symbols: look up directly. Company names: find best match even if partial/misspelled.
+- For obscure/penny stocks: give best reasonable estimate based on company size, sector, history.
+- NEVER return null. Always estimate.
+
+Return ONLY valid JSON, no markdown, no explanation:
+{
+  "name": "Full official company name",
+  "ticker": "Stock ticker symbol",
+  "exchange": "NYSE, NASDAQ, OTC, Pink Sheets, etc.",
+  "price": <number>,
+  "definition": "Exactly two words describing the business",
+  "risk": "Low, Medium, or High",
+  "score": <number 1-10>,
+  "dailyEstimate": <number, e.g. 1.23 or -0.45>,
+  "logoSearch": "company website domain e.g. apple.com",
+  "note": "one short sentence if obscure or estimated, else empty string"
+}`;
+
+  const updateDots = (done) => {
+    const dots = Array.from({length: ROUNDS}, (_, i) =>
+      i < done ? '<span style="color:var(--green)">✓</span>' : '—'
+    ).join(' ');
+    const el = document.getElementById('checkProgress');
+    if (el) el.innerHTML = dots;
+  };
+
+  // Run all 10 checks in parallel with progress tracking
+  const promises = Array.from({length: ROUNDS}, async (_, i) => {
+    try {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 600,
+          messages: [{ role: "user", content: stockPrompt(query) }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content?.[0]?.text || "";
+      const clean = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
+      results.push(parsed);
+      updateDots(results.length);
+      return parsed;
+    } catch { return null; }
+  });
+
+  await Promise.all(promises);
+
+  const valid = results.filter(Boolean);
+  if (valid.length === 0) {
+    resultDiv.innerHTML = `<div class="card"><div class="error">Could not load data. Try a different search.</div></div>`;
+    return;
+  }
+
+  // Consensus: average numbers, pick most common strings
+  const consensus = buildConsensus(valid);
+  consensus._checkedAt = new Date();
+  consensus._confidence = Math.round((valid.length / ROUNDS) * 100);
+  renderCard(consensus);
+}
+
+function buildConsensus(results) {
+  const pick = (key) => {
+    const vals = results.map(r => r[key]).filter(Boolean);
+    const freq = {};
+    vals.forEach(v => freq[v] = (freq[v] || 0) + 1);
+    return Object.entries(freq).sort((a,b) => b[1]-a[1])[0]?.[0] || vals[0];
+  };
+  const avg = (key) => {
+    const nums = results.map(r => parseFloat(r[key])).filter(n => !isNaN(n));
+    return nums.length ? nums.reduce((a,b) => a+b, 0) / nums.length : 0;
+  };
+  return {
+    name: pick('name'),
+    ticker: pick('ticker'),
+    exchange: pick('exchange'),
+    price: avg('price'),
+    definition: pick('definition'),
+    risk: pick('risk'),
+    score: Math.round(avg('score')),
+    dailyEstimate: avg('dailyEstimate'),
+    logoSearch: pick('logoSearch'),
+    note: pick('note') || ''
+  };
+}
+
+let currentStock = null;
+
+function renderCard(stock) {
+  currentStock = stock;
+  const scoreWidth = (stock.score / 10) * 100;
+  const riskClass = stock.risk === 'Low' ? 'risk-low' : stock.risk === 'High' ? 'risk-high' : 'risk-medium';
+  const riskKey = (stock.risk || 'medium').toLowerCase();
+  const dailyVal = parseFloat(stock.dailyEstimate);
+  const dailyColor = dailyVal >= 0 ? '#00e676' : '#ff3d57';
+  const dailyPrefix = dailyVal >= 0 ? '+' : '';
+  const price = parseFloat(stock.price || 0);
+  const priceStr = price < 1 ? price.toFixed(4) : price.toFixed(2);
+  const dailyStr = Math.abs(dailyVal) < 0.01 ? Math.abs(dailyVal).toFixed(4) : Math.abs(dailyVal).toFixed(2);
+
+  const logoUrl = `https://logo.clearbit.com/${stock.logoSearch}`;
+  const initials = (stock.ticker || '??').slice(0, 2).toUpperCase();
+  const colors = ['#00e676','#00bcd4','#7c4dff','#ff6d00','#f50057','#ffab00'];
+  const colorIdx = initials.charCodeAt(0) % colors.length;
+  const fallbackColor = colors[colorIdx];
+  const confidence = stock._confidence || 100;
+  const checkedAt = stock._checkedAt ? stock._checkedAt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+  const checkedDate = stock._checkedAt ? stock._checkedAt.toLocaleDateString([], {month:'short', day:'numeric'}) : '';
+
+  const metaBar = `
+    <div class="meta-bar">
+      <span>✓ Verified across 10 checks &nbsp;·&nbsp; ${confidence}% consensus</span>
+      <span class="meta-right">
+        ${checkedAt ? `Updated ${checkedDate} ${checkedAt}` : ''}
+        <button class="refresh-btn" onclick="lookupStock('${(stock._query||lastQuery||'').replace(/'/g,"\\'")}')">↻ Refresh</button>
+      </span>
+    </div>`;
+
+  // Caution message based on risk + price
+  const cautions = {
+    low:    price > 50 ? `✔ Stable pick — but at $${priceStr}/share, start small` : `✔ Low risk — good for beginners`,
+    medium: price > 50 ? `⚠ Moderate risk — $${priceStr}/share is a real commitment` : `⚠ Some volatility — invest carefully`,
+    high:   price > 50 ? `🚨 High risk — $${priceStr}/share could drop fast` : `🚨 High risk — only invest what you can lose`
+  };
+  const cautionText = cautions[riskKey] || '';
+
+  // Dollar signs based on price
+  const dollarSigns = price > 200 ? '$$$' : price > 50 ? '$$' : '$';
+
+  resultDiv.innerHTML = `
+    <div class="card">
+      ${metaBar}
+      <div class="card-header">
+        <div class="logo-box" id="logoBox">
+          <img src="${logoUrl}" alt="${stock.name}"
+               onload="document.getElementById('logoBox').style.background='#111'"
+               onerror="this.style.display='none'; document.getElementById('fallbackText').style.display='flex'; document.getElementById('logoBox').style.background='${fallbackColor}22'; document.getElementById('logoBox').style.borderColor='${fallbackColor}44';" />
+          <span id="fallbackText" class="fallback" style="display:none; color:${fallbackColor}">${initials}</span>
+        </div>
+        <div class="header-info">
+          <div class="company-name">${stock.name || 'Unknown'}</div>
+          <div class="ticker">${stock.ticker || '—'} <span class="exchange-tag">${stock.exchange || ''}</span></div>
+          <div class="definition">${stock.definition || '—'}</div>
+        </div>
+        <div class="price-big">
+          <div class="price-number">$${priceStr}</div>
+          <div class="price-label">per share</div>
+        </div>
+      </div>
+
+      ${noteHtml}
+
+      <div class="risk-section">
+        <div class="risk-row">
+          <div class="risk-left">
+            <div class="risk-top-label">Risk Level</div>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span class="risk-pill ${riskClass}">${stock.risk || '—'}</span>
+              <span class="risk-pill ${riskClass}" style="letter-spacing:1px; font-size:13px;">${dollarSigns}</span>
+            </div>
+            <div class="risk-caution caution-${riskKey}">${cautionText}</div>
+          </div>
+          <button class="more-btn ${riskKey}" onclick="showRiskDetail()">Tell Me More</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-label">Est. Daily Move</div>
+          <div class="stat-value" style="font-family:'DM Mono',monospace; color:${dailyColor}">${dailyPrefix}$${dailyStr} / share</div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-label">Performance Score</div>
+          <div class="score-bar-wrap" style="margin-top:6px;">
+            <div class="score-bar">
+              <div class="score-fill" style="width: ${scoreWidth}%"></div>
+            </div>
+            <div>
+              <span class="score-num">${stock.score}</span>
+              <span class="score-ten">/10</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function showRiskDetail() {
+  const stock = currentStock;
+  if (!stock) return;
+  const riskKey = (stock.risk || 'medium').toLowerCase();
+  const price = parseFloat(stock.price || 0);
+
+  // Build modal
+  document.body.insertAdjacentHTML('beforeend', `
+    <div class="modal-overlay" id="riskModal" onclick="closeModal(event)">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title" style="color:${riskKey==='low'?'var(--green)':riskKey==='high'?'var(--red)':'var(--yellow)'}">
+            ${stock.risk} Risk — ${stock.name}
+          </div>
+          <button class="modal-close" onclick="document.getElementById('riskModal').remove()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-loading" id="modalLoading">
+            <div class="modal-spinner ${riskKey}"></div>
+            LOADING RISK BREAKDOWN...
+          </div>
+          <div class="modal-text" id="modalText" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+  `);
+
+  const prompt = `You are a beginner-friendly stock advisor. Give a short, plain-English risk breakdown for ${stock.name} (${stock.ticker}).
+
+Price per share: $${price.toFixed(2)}
+Risk level: ${stock.risk}
+${price > 50 ? `Note: At over $50/share, this is a significant financial commitment for a beginner.` : ''}
+
+Write 2-3 short paragraphs explaining:
+1. Why this stock has ${stock.risk} risk
+2. What could go wrong (be honest but not scary)
+3. One simple tip for someone considering buying it
+
+Keep it simple — write like you're explaining to a teenager buying their first stock. No jargon. Use <p> tags for paragraphs and <strong> for key points.`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 500,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.[0]?.text || "Could not load details.";
+    document.getElementById('modalLoading').style.display = 'none';
+    document.getElementById('modalText').style.display = 'block';
+    document.getElementById('modalText').innerHTML = text;
+  } catch {
+    document.getElementById('modalLoading').style.display = 'none';
+    document.getElementById('modalText').style.display = 'block';
+    document.getElementById('modalText').innerHTML = '<p>Could not load risk details. Try again.</p>';
+  }
+}
+
+function closeModal(e) {
+  if (e.target.id === 'riskModal') document.getElementById('riskModal').remove();
+}
+</script>
+</body>
+</html>
